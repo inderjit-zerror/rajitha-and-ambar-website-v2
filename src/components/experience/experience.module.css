@@ -1,0 +1,666 @@
+/* ───────────────────────────── Tokens ───────────────────────────── */
+.root {
+  --sky-top: #e7eff7;
+  --sky-bottom: #c2d2e4;
+  --navy: #1b2f6b;
+  --navy-deep: #14265c; /* loading screen — keep in sync with COLORS.veil */
+  --mist: rgba(27, 47, 107, 0.66);
+  --hair: rgba(27, 47, 107, 0.16);
+  --white: #f8fbfe;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --edge: clamp(18px, 2.6vw, 44px);
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--navy);
+  /* one typeface everywhere: the serif of the book cover (see app/layout.js) */
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.3;
+  -webkit-tap-highlight-color: transparent;
+  /* soft studio light on a Riviera-blue backdrop */
+  background:
+    radial-gradient(58% 62% at 62% 44%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+}
+/* low-specificity reset, so every button class below can restyle its text */
+:where(.root) button {
+  font: inherit;
+  color: inherit;
+}
+
+/* ─────────────────── Big title (behind the 3D canvas) ─────────────────── */
+.title {
+  position: absolute;
+  z-index: 1;
+  left: var(--edge);
+  top: clamp(92px, 14vh, 180px);
+  margin: 0;
+  pointer-events: none;
+  font-weight: 500;
+  font-size: clamp(64px, 14.6vw, 292px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+.titleLine {
+  display: block;
+  overflow: hidden; /* mask for the letters sliding in / out */
+  padding: 0.05em 0.06em 0 0;
+  margin-top: -0.22em;
+  white-space: nowrap;
+}
+.titleLine:nth-child(2) {
+  margin-left: 0.2em;
+}
+.letter {
+  display: inline-block;
+  transform: translateY(112%);
+  transition: transform 1.25s var(--ease);
+  transition-delay: calc(var(--i) * 38ms);
+  will-change: transform;
+}
+.root[data-phase="intro"] .letter,
+.root[data-phase="closed"] .letter {
+  transform: none;
+}
+.root[data-phase="intro"] .letter {
+  transition-delay: calc(900ms + var(--i) * 38ms);
+}
+.root[data-phase="opening"] .letter,
+.root[data-phase="open"] .letter,
+.root[data-phase="closing"] .letter {
+  transform: translateY(-112%);
+  transition-duration: 0.9s;
+  transition-delay: calc(var(--i) * 22ms);
+}
+
+/* ───────────────────────────── 3D stage ───────────────────────────── */
+.stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  touch-action: none;
+}
+.noCursor,
+.noCursor canvas {
+  cursor: none;
+}
+
+/* ─────────────────────────────── Loader ───────────────────────────────
+ * Text only. Its background is the same colour as the WebGL veil behind it
+ * and is dropped the moment the veil starts to drain away (see Loader.jsx). */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+.sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: calc(var(--edge) + 2px) var(--edge) var(--edge);
+  background-color: var(--navy-deep);
+  color: var(--white);
+}
+.mask {
+  display: block;
+  overflow: hidden;
+}
+.mask > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+}
+.loaderTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.loaderTop .mask:first-child {
+  font-size: 27px;
+  letter-spacing: 0;
+}
+.loaderBottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+.loaderNames {
+  padding-bottom: clamp(8px, 2vw, 30px);
+  font-size: clamp(28px, 3.3vw, 52px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.loaderNames .mask:nth-child(2) > span {
+  animation-delay: 0.08s;
+}
+.loaderSub {
+  margin-top: 6px;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  opacity: 0.66;
+}
+.loaderCount {
+  font-size: clamp(130px, 30vw, 500px);
+  line-height: 0.74;
+  letter-spacing: -0.04em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.loaderCount > span {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0.06em;
+  animation-delay: 0.12s;
+}
+.loaderCount i {
+  margin: 0.08em 0 0 0.05em;
+  font-size: 0.22em;
+  font-style: normal;
+  letter-spacing: 0;
+  opacity: 0.66;
+}
+.loaderBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(248, 251, 254, 0.12);
+}
+.loaderBar > span {
+  position: absolute;
+  inset: 0;
+  background: var(--white);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+@keyframes rise {
+  from { transform: translateY(115%); }
+  to { transform: none; }
+}
+
+/* ────────────────────────────── Overlay UI ────────────────────────────── */
+.ui {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.root:not([data-phase="loading"]) .ui {
+  opacity: 1;
+  transition-delay: 1.3s;
+}
+
+/* shared show / hide */
+.bar,
+.close,
+.dots {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.7s var(--ease),
+    visibility 0s linear 0.7s;
+}
+.on {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity 0.8s 0.1s ease,
+    transform 1s 0.1s var(--ease),
+    visibility 0s;
+}
+
+/* Top navigation */
+.nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: calc(var(--edge) - 4px) var(--edge) 0;
+  pointer-events: auto;
+}
+.logo {
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+}
+.logo i {
+  margin: 0 1px;
+  font-style: normal;
+  opacity: 0.45;
+}
+.navLinks {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(248, 251, 254, 0.55);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+.navLink {
+  padding: 6px 20px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 600;
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+.navLink:hover {
+  background: rgba(27, 47, 107, 0.08);
+}
+.navLink.current {
+  background: var(--navy);
+  color: var(--white);
+}
+.navEnd {
+  position: relative;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+}
+.navMeta {
+  font-size: 18px;
+  font-weight: 600;
+  transition:
+    opacity 0.4s ease,
+    transform 0.6s var(--ease);
+}
+.gone {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+.close {
+  position: absolute;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 18px;
+  font-weight: 600;
+}
+.close > span {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--navy);
+  transition: transform 0.6s var(--ease);
+}
+.close > span::before,
+.close > span::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 20px;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--white);
+  transform: rotate(45deg);
+}
+.close > span::after {
+  transform: rotate(-45deg);
+}
+.close:hover > span {
+  transform: rotate(90deg);
+}
+
+/* Bottom bars */
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  padding: 0 var(--edge) calc(var(--edge) + 2px);
+}
+.barStart {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+.barStart strong {
+  font-weight: 600;
+}
+.barStart span,
+.barEnd,
+.hint {
+  color: var(--mist);
+}
+.barEnd,
+.hint {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-size: 18px;
+  text-align: right;
+}
+.dragIcon {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border: 1.5px solid var(--mist);
+  border-radius: 999px;
+}
+.dragIcon::after {
+  content: "";
+  position: absolute;
+  top: 3.5px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--navy);
+  animation: nudge 2.2s var(--ease) infinite;
+}
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(11px); }
+}
+
+/* "Click To Open" */
+.magnetZone {
+  padding: 26px 34px 0;
+  margin-bottom: -4px;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 8px 8px 30px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--white) !important;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 18px 34px -16px rgba(20, 38, 92, 0.75);
+  transition:
+    background-color 0.4s ease,
+    box-shadow 0.5s ease;
+  will-change: transform;
+}
+.ctaLabel {
+  padding-bottom: 2px;
+}
+.ctaIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--navy);
+  overflow: hidden;
+}
+.ctaIcon svg {
+  transition: transform 0.6s var(--ease);
+}
+.cta:hover {
+  background: var(--navy-deep);
+  box-shadow: 0 24px 40px -16px rgba(20, 38, 92, 0.85);
+}
+.cta:hover .ctaIcon svg {
+  transform: translate(3px, -3px);
+}
+.cta:focus-visible,
+.navLink:focus-visible,
+.tab:focus-visible,
+.close:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 4px;
+}
+
+/* Open state: counter · tabs · hint */
+.count {
+  margin: 0;
+  font-size: clamp(40px, 4vw, 64px);
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.count span {
+  margin-left: 4px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--mist);
+}
+.tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(248, 251, 254, 0.7);
+  box-shadow:
+    inset 0 0 0 1px var(--hair),
+    0 18px 34px -22px rgba(20, 38, 92, 0.55);
+}
+.glider {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc((100% - 10px) / var(--count));
+  border-radius: 999px;
+  background: var(--navy);
+  transform: translateX(calc(var(--index) * 100%));
+  transition: transform 0.7s var(--ease);
+}
+.tab {
+  position: relative;
+  padding: 9px 22px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.4s ease;
+}
+.tab.tabOn {
+  color: var(--white);
+}
+
+/* ───────────────────────── Narrow / portrait screens ───────────────────────── */
+.root[data-narrow] .title {
+  top: clamp(70px, 10.5vh, 116px);
+  font-size: 20.4vw;
+}
+.root[data-narrow] .navMeta,
+.root[data-narrow] .barStart,
+.root[data-narrow] .barEnd,
+.root[data-narrow] .count {
+  display: none;
+}
+.root[data-narrow] .navLink {
+  padding: 5px 14px 7px;
+  font-size: 16px;
+}
+.root[data-narrow] .close {
+  font-size: 0;
+  gap: 0;
+}
+.root[data-narrow] .bar {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding-bottom: max(env(safe-area-inset-bottom), 18px);
+}
+.root[data-narrow] .openBar {
+  gap: 10px;
+}
+.root[data-narrow] .tabs {
+  width: 100%;
+}
+.root[data-narrow] .tab {
+  padding: 9px 2px 11px;
+  font-size: 15px;
+}
+.root[data-narrow] .hint {
+  grid-row: 1;
+  justify-self: center;
+  margin: 0;
+  font-size: 16px;
+}
+.dots {
+  position: absolute;
+  left: 50%;
+  bottom: calc(max(env(safe-area-inset-bottom), 18px) + 98px);
+  display: flex;
+  gap: 8px;
+  margin-left: -17px;
+}
+.dots button {
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hair);
+  transition: background-color 0.3s ease;
+}
+.dots .dotOn {
+  background: var(--navy);
+}
+
+/* ─────────────────────────── Custom cursor ─────────────────────────── */
+.cursor {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.cursor[data-visible="true"] {
+  opacity: 1;
+}
+.cursorRing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--navy);
+  will-change: transform;
+  transition:
+    width 0.45s var(--ease),
+    height 0.45s var(--ease),
+    margin 0.45s var(--ease);
+}
+.cursorRing span {
+  padding-bottom: 2px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--white);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.cursor[data-state="open"] .cursorRing,
+.cursor[data-state="view"] .cursorRing,
+.cursor[data-state="back"] .cursorRing {
+  width: 78px;
+  height: 78px;
+  margin: -39px 0 0 -39px;
+}
+.cursor[data-state="open"] .cursorRing span,
+.cursor[data-state="view"] .cursorRing span,
+.cursor[data-state="back"] .cursorRing span {
+  opacity: 1;
+}
+.cursor[data-state="drag"] .cursorRing {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+
+/* ─────────────────────── Static (no-WebGL) fallback ─────────────────────── */
+.static {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 24px 16px;
+}
+.staticImage {
+  max-width: min(480px, 100%);
+  max-height: calc(100% - 110px);
+  object-fit: contain;
+  box-shadow: 0 30px 60px -30px rgba(20, 38, 92, 0.7);
+}
+.staticEvents {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.staticEvents button {
+  padding: 8px 20px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(248, 251, 254, 0.7);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.staticEvents button[aria-pressed="true"] {
+  background: var(--navy);
+  color: var(--white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mask > span,
+  .dragIcon::after {
+    animation: none;
+  }
+  .letter {
+    transition-duration: 0.3s;
+    transition-delay: 0s !important;
+  }
+}
