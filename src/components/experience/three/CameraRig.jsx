@@ -20,9 +20,8 @@ const VIEWS = {
     box: { x: 0, y: 0, w: 1.62, h: 2.0 },
     top: narrow ? vh * 0.26 : Math.max(120, vh * 0.17),
     bottom: narrow ? Math.max(170, vh * 0.22) : Math.max(160, vh * 0.22),
-    // wide screens: the book sits right of centre, the big title to its left
-    left: narrow ? 30 : vw * 0.47,
-    right: narrow ? 30 : vw * 0.07,
+    // centred; on wide screens the two halves of the title flank it
+    side: narrow ? 30 : vw * 0.3,
   }),
   spread: (vw, vh, narrow) => ({
     box: { x: 0, y: 0, w: spreadW + 0.08, h: board.h + 0.08 },

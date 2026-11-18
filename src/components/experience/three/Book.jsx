@@ -83,8 +83,7 @@ function flexSlabGeometries(w, h, t) {
  *
  * Both hinge axes run through the centre of the boards' rounded edges, so the
  * joints stay closed at every angle. The front board also flexes while it
- * swings (vertex shader), and the whole book first appears behind a glowing
- * wave (fragment shader).
+ * swings (vertex shader).
  */
 export default function Book({ maps }) {
   const phase = useExperience((s) => s.phase);
@@ -150,14 +149,17 @@ export default function Book({ maps }) {
     const d = reducedMotion ? 0.4 : 1;
 
     if (phase === "intro") {
-      // The loading veil is draining upwards; the book appears in its wake,
-      // behind a glowing wave, while it turns the last few degrees into place.
+      // While the loading veil drains upwards, the book flies up from below
+      // the screen, makes one full 360° turn and settles in the centre.
+      const { rx, ry, rz } = HERO_POSE;
       list.push(
         gsap
           .timeline()
-          .to(anim, { reveal: 1, duration: 2.4 * d, ease: "power1.inOut" }, 0.7 * d)
-          .to(pose, { ...HERO_POSE, x: 0, y: 0, s: 1, duration: 3.2 * d, ease: "power3.out" }, 0.5 * d)
-          .call(() => setPhase("closed"), null, 2.6 * d),
+          .to(pose, { y: 0, duration: 2.5 * d, ease: "expo.out" }, 0.35 * d)
+          .to(pose, { ry, duration: 3.0 * d, ease: "power3.out" }, 0.35 * d)
+          .to(pose, { rx, rz, s: 1, duration: 2.6 * d, ease: "power3.out" }, 0.35 * d)
+          .to(anim, { reveal: 1, duration: 1.6 * d, ease: "power2.out" }, 0.9 * d)
+          .call(() => setPhase("closed"), null, 2.5 * d),
       );
     }
 
@@ -168,7 +170,7 @@ export default function Book({ maps }) {
       list.push(
         gsap
           .timeline()
-          // make sure the book is fully there, and turn it to face the viewer…
+          // turn it to face the viewer…
           .to(anim, { reveal: 1, duration: 0.4 * d, overwrite: "auto" }, 0)
           .to(spin, { x: 0, y: 0, duration: 0.9 * d, ease: "power3.out", overwrite: true }, 0)
           .to(pose, { x: 0, y: 0, z: 0, rx: 0.05, ry: 0, rz: 0, s: 1, duration: 1.5 * d, ease: "power3.inOut", overwrite: true }, 0)
@@ -229,7 +231,6 @@ export default function Book({ maps }) {
 
     spinePivot.current.rotation.y = anim.spine;
     frontPivot.current.rotation.y = anim.front;
-    FX.uReveal.value = anim.reveal;
     FX.uCoverBend.value = anim.bend;
 
     // closed: the book's own centre sits on the rig origin; open: its spine does

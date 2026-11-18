@@ -7,7 +7,6 @@ import { useExperience } from "@/store/useExperience";
 import styles from "./experience.module.css";
 
 const cx = (...c) => c.filter(Boolean).join(" ");
-const pad = (n) => String(n).padStart(2, "0");
 
 /** The button drifts towards the cursor while it is near (mouse only). */
 function useMagnet(enabled) {
@@ -56,33 +55,9 @@ export default function Overlay() {
   const active = EVENTS.findIndex((e) => e.id === activeEvent); // -1 = invitation
   const [magnetZone, magnetTarget] = useMagnet(coarse === false);
 
-  const goInvitation = () => (isOpen ? showInvitation() : open());
-  const goEvents = () => {
-    if (!isOpen) open();
-    else if (narrow && view !== "right") setView("right");
-    else selectEvent(EVENTS[(active + 1) % EVENTS.length].id);
-  };
-
-  let hint = "";
-  if (isOpen && !narrow) hint = activeEvent ? "Click the card to see the invitation again" : "Pick a card from the pocket";
-  if (isOpen && narrow) hint = view === "right" ? "Tap a card to open it" : activeEvent ? "Tap the card for the invitation" : "Swipe to see the events";
-
   return (
     <div className={styles.ui}>
       <header className={styles.nav}>
-        <span className={styles.logo}>
-          R<i>&amp;</i>A
-        </span>
-
-        <nav className={styles.navLinks} aria-label="Sections">
-          <button type="button" className={cx(styles.navLink, isOpen && active < 0 && view !== "right" && styles.current)} onClick={goInvitation}>
-            Invitation
-          </button>
-          <button type="button" className={cx(styles.navLink, isOpen && (active >= 0 || view === "right") && styles.current)} onClick={goEvents}>
-            Events
-          </button>
-        </nav>
-
         <div className={styles.navEnd}>
           <span className={cx(styles.navMeta, isOpen && styles.gone)}>Wedding Invitation</span>
           <button type="button" className={cx(styles.close, isOpen && styles.on)} onClick={close} tabIndex={isOpen ? 0 : -1} aria-hidden={!isOpen}>
@@ -118,11 +93,6 @@ export default function Overlay() {
 
       {/* ── Open: event tabs ─────────────────────────────────────────── */}
       <div className={cx(styles.bar, styles.openBar, isOpen && styles.on)} aria-hidden={!isOpen}>
-        <p className={styles.count} aria-hidden="true">
-          {pad(active + 1)}
-          <span>/{pad(EVENTS.length)}</span>
-        </p>
-
         <div className={styles.tabs} role="tablist" aria-label="Cards" style={{ "--index": active + 1, "--count": EVENTS.length + 1 }}>
           <span className={styles.glider} aria-hidden="true" />
           <button type="button" role="tab" aria-selected={active < 0} className={cx(styles.tab, active < 0 && styles.tabOn)} onClick={showInvitation} tabIndex={isOpen ? 0 : -1}>
@@ -142,10 +112,6 @@ export default function Overlay() {
             </button>
           ))}
         </div>
-
-        <p className={styles.hint} aria-live="polite">
-          {hint}
-        </p>
       </div>
 
       {/* Phones: which panel is in view */}

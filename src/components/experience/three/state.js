@@ -10,10 +10,10 @@ const HALF_PI = Math.PI / 2;
 export const anim = {
   /** loading veil: 0 = covers the screen, 1 = drained away */
   veil: 0,
-  /** book reveal wave: 0 = hidden, 1 = fully there (also fades the backdrop shadow in) */
+  /** 0 → 1 as the book arrives: fades its shadow on the backdrop in */
   reveal: 0,
-  /** the book's pose; starts slightly turned away and eases into the hero pose */
-  pose: { x: 0, y: -0.06, z: 0, rx: HERO_POSE.rx + 0.16, ry: HERO_POSE.ry - 0.7, rz: HERO_POSE.rz + 0.08, s: 0.9 },
+  /** the book's pose; starts below the screen, one full turn (360°) short of the hero pose */
+  pose: { x: 0, y: -4.6, z: 0, rx: HERO_POSE.rx + 0.5, ry: HERO_POSE.ry - Math.PI * 2, rz: HERO_POSE.rz + 0.28, s: 0.82 },
   /** hinge angles: HALF_PI = folded shut, 0 = lying open */
   front: HALF_PI,
   spine: HALF_PI,

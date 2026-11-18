@@ -7,6 +7,7 @@
   --mist: rgba(27, 47, 107, 0.66);
   --hair: rgba(27, 47, 107, 0.16);
   --white: #f8fbfe;
+  --gold: #d8b676;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --edge: clamp(18px, 2.6vw, 44px);
 
@@ -31,16 +32,25 @@
   color: inherit;
 }
 
-/* ─────────────────── Big title (behind the 3D canvas) ─────────────────── */
+/* ─────────────────── Big title (behind the 3D canvas) ───────────────────
+ * Wide screens: "RAJITHA" left and "& AMBAR" right of the centred book, on the
+ * book's own centre line. Narrow screens: two stacked lines above the book. */
 .title {
   position: absolute;
   z-index: 1;
   left: var(--edge);
-  top: clamp(92px, 14vh, 180px);
+  right: var(--edge);
+  /* vertical centre of the area the camera frames the book in (see CameraRig) */
+  top: calc((max(120px, 17%) + 100% - max(160px, 22%)) / 2);
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
   margin: 0;
   pointer-events: none;
   font-weight: 500;
-  font-size: clamp(64px, 14.6vw, 292px);
+  /* fills the space beside the book: the book's width follows the viewport
+     height (~40vh), each word is ~4.25em wide */
+  font-size: clamp(40px, calc((50vw - 20vh) / 4.25), 230px);
   line-height: 1;
   letter-spacing: -0.02em;
   text-transform: uppercase;
@@ -49,12 +59,8 @@
 .titleLine {
   display: block;
   overflow: hidden; /* mask for the letters sliding in / out */
-  padding: 0.05em 0.06em 0 0;
-  margin-top: -0.22em;
+  padding: 0.05em 0.04em 0 0;
   white-space: nowrap;
-}
-.titleLine:nth-child(2) {
-  margin-left: 0.2em;
 }
 .letter {
   display: inline-block;
@@ -91,8 +97,9 @@
 }
 
 /* ─────────────────────────────── Loader ───────────────────────────────
- * Text only. Its background is the same colour as the WebGL veil behind it
- * and is dropped the moment the veil starts to drain away (see Loader.jsx). */
+ * Blessing image in an arch, names, a fine gold progress line. Its background
+ * is the same colour as the WebGL veil behind it and is dropped the moment
+ * the veil starts to drain away (see Loader.jsx). */
 .loader {
   position: fixed;
   inset: 0;
@@ -102,91 +109,109 @@
 .sheet {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: calc(var(--edge) + 2px) var(--edge) var(--edge);
+  display: grid;
+  place-items: center;
   background-color: var(--navy-deep);
   color: var(--white);
+}
+.loaderContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
 }
 .mask {
   display: block;
   overflow: hidden;
 }
+/* "backwards": once it has played, GSAP is free to move the element */
 .mask > span {
   display: block;
-  animation: rise 1s var(--ease) both;
+  animation: rise 1.1s var(--ease) backwards;
 }
-.loaderTop {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  font-size: 17px;
+.loaderBlessing {
+  padding-bottom: 2px;
+  font-size: clamp(13px, 1.15vw, 17px);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  animation-delay: 0.15s !important;
 }
-.loaderTop .mask:first-child {
-  font-size: 27px;
-  letter-spacing: 0;
+.arch {
+  position: relative;
+  isolation: isolate; /* keeps the glow behind the image but in front of the background */
+  height: min(44vh, 430px);
+  aspect-ratio: 736 / 920;
+  margin: clamp(16px, 2.6vh, 28px) 0 clamp(16px, 2.8vh, 30px);
+  padding: 7px;
+  border: 1px solid rgba(216, 182, 118, 0.7);
+  border-radius: 999px 999px 4px 4px; /* temple arch */
+  animation: archIn 1.6s var(--ease) backwards;
 }
-.loaderBottom {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
+.arch img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px 999px 2px 2px;
+}
+.archGlow {
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(216, 182, 118, 0.34) 48%, rgba(216, 182, 118, 0) 100%);
+  animation: glow 3.8s ease-in-out infinite;
 }
 .loaderNames {
-  padding-bottom: clamp(8px, 2vw, 30px);
-  font-size: clamp(28px, 3.3vw, 52px);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-}
-.loaderNames .mask:nth-child(2) > span {
-  animation-delay: 0.08s;
+  font-size: clamp(30px, 3.5vw, 56px);
+  line-height: 1.12;
+  letter-spacing: -0.005em;
+  animation-delay: 0.3s !important;
 }
 .loaderSub {
-  margin-top: 6px;
-  font-size: 17px;
-  letter-spacing: 0.02em;
-  opacity: 0.66;
-}
-.loaderCount {
-  font-size: clamp(130px, 30vw, 500px);
-  line-height: 0.74;
-  letter-spacing: -0.04em;
-  font-variant-numeric: lining-nums tabular-nums;
-}
-.loaderCount > span {
-  display: flex;
-  align-items: flex-start;
-  padding-top: 0.06em;
-  animation-delay: 0.12s;
-}
-.loaderCount i {
-  margin: 0.08em 0 0 0.05em;
-  font-size: 0.22em;
-  font-style: normal;
-  letter-spacing: 0;
-  opacity: 0.66;
+  padding: 8px 0 2px;
+  font-size: clamp(13px, 1.1vw, 16px);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  animation-delay: 0.42s !important;
 }
 .loaderBar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: rgba(248, 251, 254, 0.12);
+  position: relative;
+  width: clamp(120px, 13vw, 190px);
+  height: 1px;
+  margin-top: clamp(18px, 2.8vh, 28px);
+  background: rgba(216, 182, 118, 0.24);
+  animation: fadeIn 1.2s 0.5s ease backwards;
 }
 .loaderBar > span {
   position: absolute;
   inset: 0;
-  background: var(--white);
+  background: var(--gold);
   transform: scaleX(0);
   transform-origin: left center;
 }
 @keyframes rise {
   from { transform: translateY(115%); }
   to { transform: none; }
+}
+@keyframes archIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes glow {
+  0%, 100% { opacity: 0.55; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ────────────────────────────── Overlay UI ────────────────────────────── */
@@ -233,47 +258,11 @@
   top: 0;
   left: 0;
   right: 0;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  justify-content: flex-end;
   align-items: center;
   padding: calc(var(--edge) - 4px) var(--edge) 0;
   pointer-events: auto;
-}
-.logo {
-  font-size: 30px;
-  font-weight: 600;
-  line-height: 1;
-}
-.logo i {
-  margin: 0 1px;
-  font-style: normal;
-  opacity: 0.45;
-}
-.navLinks {
-  display: flex;
-  gap: 6px;
-  padding: 5px;
-  border-radius: 999px;
-  background: rgba(248, 251, 254, 0.55);
-  box-shadow: inset 0 0 0 1px var(--hair);
-}
-.navLink {
-  padding: 6px 20px 8px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  font-size: 18px;
-  font-weight: 600;
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease;
-}
-.navLink:hover {
-  background: rgba(27, 47, 107, 0.08);
-}
-.navLink.current {
-  background: var(--navy);
-  color: var(--white);
 }
 .navEnd {
   position: relative;
@@ -353,12 +342,10 @@
   font-weight: 600;
 }
 .barStart span,
-.barEnd,
-.hint {
+.barEnd {
   color: var(--mist);
 }
-.barEnd,
-.hint {
+.barEnd {
   justify-self: end;
   display: flex;
   align-items: center;
@@ -438,27 +425,16 @@
   transform: translate(3px, -3px);
 }
 .cta:focus-visible,
-.navLink:focus-visible,
 .tab:focus-visible,
 .close:focus-visible {
   outline: 2px solid var(--navy);
   outline-offset: 4px;
 }
 
-/* Open state: counter · tabs · hint */
-.count {
-  margin: 0;
-  font-size: clamp(40px, 4vw, 64px);
-  line-height: 0.8;
-  letter-spacing: -0.02em;
-  font-variant-numeric: lining-nums tabular-nums;
-}
-.count span {
-  margin-left: 4px;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0;
-  color: var(--mist);
+/* Open state: the card tabs, centred */
+.openBar {
+  grid-template-columns: 1fr;
+  justify-items: center;
 }
 .tabs {
   position: relative;
@@ -499,18 +475,19 @@
 
 /* ───────────────────────── Narrow / portrait screens ───────────────────────── */
 .root[data-narrow] .title {
-  top: clamp(70px, 10.5vh, 116px);
+  display: block;
+  right: auto;
+  top: clamp(56px, 8.5vh, 100px);
+  transform: none;
   font-size: 20.4vw;
+}
+.root[data-narrow] .titleLine + .titleLine {
+  margin: -0.22em 0 0 0.2em;
 }
 .root[data-narrow] .navMeta,
 .root[data-narrow] .barStart,
-.root[data-narrow] .barEnd,
-.root[data-narrow] .count {
+.root[data-narrow] .barEnd {
   display: none;
-}
-.root[data-narrow] .navLink {
-  padding: 5px 14px 7px;
-  font-size: 16px;
 }
 .root[data-narrow] .close {
   font-size: 0;
@@ -521,9 +498,6 @@
   justify-items: center;
   padding-bottom: max(env(safe-area-inset-bottom), 18px);
 }
-.root[data-narrow] .openBar {
-  gap: 10px;
-}
 .root[data-narrow] .tabs {
   width: 100%;
 }
@@ -531,16 +505,10 @@
   padding: 9px 2px 11px;
   font-size: 15px;
 }
-.root[data-narrow] .hint {
-  grid-row: 1;
-  justify-self: center;
-  margin: 0;
-  font-size: 16px;
-}
 .dots {
   position: absolute;
   left: 50%;
-  bottom: calc(max(env(safe-area-inset-bottom), 18px) + 98px);
+  bottom: calc(max(env(safe-area-inset-bottom), 18px) + 62px);
   display: flex;
   gap: 8px;
   margin-left: -17px;
@@ -656,6 +624,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mask > span,
+  .arch,
+  .archGlow,
   .dragIcon::after {
     animation: none;
   }

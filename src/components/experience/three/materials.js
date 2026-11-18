@@ -7,7 +7,6 @@ import { COLORS } from "@/config/book";
  * material) — so reveals, bends and liquid transitions are lit, reflected and
  * shadowed exactly like the rest of the book.
  *
- *   reveal   the book appears behind a glowing wave           (fragment)
  *   bend     the front cover flexes while it swings           (vertex)
  *   paint    cards appear like watercolour soaking into paper (fragment)
  *   liquid   the left card's print flows into the next one    (vertex + fragment)
@@ -16,8 +15,6 @@ import { COLORS } from "@/config/book";
 
 /** Uniforms shared by reference: one write per frame updates every material. */
 export const FX = {
-  uReveal: { value: 0 }, // 0 = book hidden, 1 = fully there
-  uRevealGlow: { value: new THREE.Color(1.0, 0.82, 0.52) },
   uCoverBend: { value: 0 }, // curvature of the front board (1 / radius)
   uTime: { value: 0 },
 };
@@ -47,51 +44,6 @@ const NOISE = /* glsl */ `
   }
   #endif
 `;
-
-/* ───────────────────────── reveal: glowing wave ───────────────────────── */
-
-const reveal = () => (shader) => {
-  shader.uniforms.uReveal = FX.uReveal;
-  shader.uniforms.uRevealGlow = FX.uRevealGlow;
-  shader.vertexShader = after(shader.vertexShader, "#include <common>", "varying vec3 vFxWorld;");
-  shader.vertexShader = after(
-    shader.vertexShader,
-    "#include <project_vertex>",
-    "vFxWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;",
-  );
-  shader.fragmentShader = after(
-    shader.fragmentShader,
-    "#include <common>",
-    /* glsl */ `
-      ${NOISE}
-      uniform float uReveal;
-      uniform vec3 uRevealGlow;
-      varying vec3 vFxWorld;
-      float fxGlow = 0.0;
-    `,
-  );
-  shader.fragmentShader = after(
-    shader.fragmentShader,
-    "#include <clipping_planes_fragment>",
-    /* glsl */ `
-      if (uReveal < 1.0) {
-        // A wave front sweeps diagonally up through the book. Ahead of it there
-        // is nothing; right behind it the surface is still glowing.
-        float field = dot(vFxWorld.xy, vec2(0.55, 0.83)) * 0.42 + 0.5;
-        field += sin(vFxWorld.x * 5.0 - vFxWorld.y * 3.0) * 0.03;
-        float d = uReveal * 1.5 - 0.25 - field;
-        if (d + (fxHash(gl_FragCoord.xy) - 0.5) * 0.035 < 0.0) discard;
-        fxGlow = 1.0 - smoothstep(0.0, 0.16, d);
-        fxGlow *= fxGlow;
-      }
-    `,
-  );
-  shader.fragmentShader = after(
-    shader.fragmentShader,
-    "#include <emissivemap_fragment>",
-    "totalEmissiveRadiance += uRevealGlow * fxGlow * 2.4;",
-  );
-};
 
 /* ───────────────────────── bend: flexing cover ───────────────────────── */
 
@@ -295,9 +247,7 @@ export function createClothMaterial(linen, repeatX, repeatY, { map = null, hinge
     normalScale: new THREE.Vector2(0.55, 0.55),
     envMapIntensity: 0.7,
   });
-  return hinge === null
-    ? patched(material, "cloth", [reveal()])
-    : patched(material, "cloth-bend", [bend(hinge), reveal()]);
+  return hinge === null ? material : patched(material, "cloth-bend", [bend(hinge)]);
 }
 
 /** Front cover: artwork + embossed foil lettering derived from it (see createCoverMaps). */
@@ -312,7 +262,7 @@ export function createCoverMaterial({ map, normalMap, ormMap }, hinge) {
     metalness: 1,
     envMapIntensity: 1.2,
   });
-  return patched(material, "cover-bend", [bend(hinge), reveal()]);
+  return patched(material, "cover-bend", [bend(hinge)]);
 }
 
 /** Shadow-pass material for anything that flexes with the front cover. */
@@ -321,8 +271,7 @@ export function createBendDepthMaterial(hinge, lift = 0) {
 }
 
 export function createPocketMaterial(map) {
-  const material = new THREE.MeshStandardMaterial({ map, roughness: 0.82, metalness: 0, envMapIntensity: 0.55 });
-  return patched(material, "pocket", [reveal()]);
+  return new THREE.MeshStandardMaterial({ map, roughness: 0.82, metalness: 0, envMapIntensity: 0.55 });
 }
 
 const paintUniforms = (aspect, seeds) => ({
