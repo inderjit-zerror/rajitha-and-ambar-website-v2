@@ -20,8 +20,13 @@ export const useExperience = create((set, get) => ({
   activeEvent: null,
   view: "spread",
   cursor: null,
+  /** px from the screen centre to the gap in the big title (wide screens) — the hero book sits there */
+  titleGapX: 0,
 
   setDevice: (device) => set({ device }),
+  setTitleGapX: (titleGapX) => {
+    if (Math.abs(get().titleGapX - titleGapX) > 0.5) set({ titleGapX });
+  },
   setNarrow: (narrow) => set({ narrow }),
   setProgress: (progress) => set({ progress }),
   setSceneReady: () => set({ sceneReady: true }),

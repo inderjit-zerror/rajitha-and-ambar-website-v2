@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { EVENTS } from "@/config/book";
 import { detectDevice } from "@/lib/device";
 import { useExperience } from "@/store/useExperience";
@@ -41,6 +41,27 @@ export default function InvitationExperience() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Wide screens: the title is centred as a group, so the gap between the two
+  // words is off-centre by half their difference in width. Measure it and let
+  // CameraRig place the hero book there.
+  const title = useRef(null);
+  useEffect(() => {
+    const el = title.current;
+    if (!el) return;
+    const { setTitleGapX } = useExperience.getState();
+    const measure = () => {
+      if (useExperience.getState().narrow) return setTitleGapX(0);
+      const [a, b] = el.children;
+      const gap = (a.getBoundingClientRect().right + b.getBoundingClientRect().left) / 2;
+      setTitleGapX(gap - window.innerWidth / 2);
+    };
+    measure();
+    document.fonts?.ready.then(measure);
+    const ro = new ResizeObserver(measure);
+    [el, ...el.children].forEach((node) => ro.observe(node));
+    return () => ro.disconnect();
+  }, [narrow]);
+
   return (
     <main className={styles.root} data-phase={phase} data-narrow={narrow ? "" : undefined}>
       {/* The canvas is invisible to crawlers and screen readers — this isn't. */}
@@ -61,7 +82,7 @@ export default function InvitationExperience() {
       </section>
 
       {/* Sits BEHIND the transparent WebGL canvas, so the book floats over it. */}
-      <p className={styles.title} aria-hidden="true">
+      <p ref={title} className={styles.title} aria-hidden="true">
         {TITLE.map((line, l) => (
           <span key={line} className={styles.titleLine}>
             {[...line].map((char, i) => (

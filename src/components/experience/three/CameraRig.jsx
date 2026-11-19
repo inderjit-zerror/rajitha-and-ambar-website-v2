@@ -16,12 +16,15 @@ const { board, pageX, spreadW } = BOOK;
  * HTML around it needs. The camera always looks straight at the backdrop.
  */
 const VIEWS = {
-  hero: (vw, vh, narrow) => ({
+  // Wide screens: in the gap of the big title, which is `gapX` px off-centre
+  // (the two words differ in width). The title's CSS sizes that gap from these
+  // same numbers — keep experience.module.css (.title) in sync.
+  hero: (vw, vh, narrow, gapX = 0) => ({
     box: { x: 0, y: 0, w: 1.62, h: 2.0 },
     top: narrow ? vh * 0.26 : Math.max(120, vh * 0.17),
     bottom: narrow ? Math.max(170, vh * 0.22) : Math.max(160, vh * 0.22),
-    // centred; on wide screens the two halves of the title flank it
-    side: narrow ? 30 : vw * 0.3,
+    left: narrow ? 30 : vw * 0.3 + gapX,
+    right: narrow ? 30 : vw * 0.3 - gapX,
   }),
   spread: (vw, vh, narrow) => ({
     box: { x: 0, y: 0, w: spreadW + 0.08, h: board.h + 0.08 },
@@ -44,8 +47,8 @@ const VIEWS = {
 };
 
 /** Camera distance + offset that fit the box inside the UI-safe area. */
-function frame(key, vw, vh, narrow) {
-  const { box, top, bottom, side = 0, left = side, right = side } = VIEWS[key](vw, vh, narrow);
+function frame(key, vw, vh, narrow, gapX) {
+  const { box, top, bottom, side = 0, left = side, right = side } = VIEWS[key](vw, vh, narrow, gapX);
   const availW = Math.max(120, vw - left - right);
   const availH = Math.max(120, vh - top - bottom);
   const d = Math.max((box.h * vh) / (2 * TAN * availH), (box.w * vh) / (2 * TAN * availW));
@@ -73,6 +76,7 @@ export default function CameraRig() {
   const view = useExperience((s) => s.view);
   const coarse = useExperience((s) => s.device.coarse);
   const reducedMotion = useExperience((s) => s.device.reducedMotion);
+  const gapX = useExperience((s) => s.titleGapX);
 
   const base = useRef(null);
   const lastKey = useRef(null);
@@ -80,7 +84,7 @@ export default function CameraRig() {
   const key = viewFor(phase, narrow, view);
 
   useEffect(() => {
-    const next = frame(key, width, height, narrow);
+    const next = frame(key, width, height, narrow, gapX);
     const from = lastKey.current;
     lastKey.current = key;
     if (!base.current) {
@@ -93,13 +97,13 @@ export default function CameraRig() {
     else if (key === "hero" && from !== "hero") [duration, ease] = [1.9, "power3.inOut"];
     else if (from !== key) [duration, ease] = [1.2, "power3.inOut"];
     gsap.to(base.current, { ...next, duration: reducedMotion ? Math.min(duration, 0.6) : duration, ease, overwrite: true });
-  }, [key, width, height, narrow, reducedMotion]);
+  }, [key, width, height, narrow, gapX, reducedMotion]);
 
   // Dolly in as the book arrives.
   useEffect(() => {
     if (phase !== "intro" || !base.current) return;
-    const { d } = frame("hero", width, height, narrow);
-    gsap.to(base.current, { d, duration: reducedMotion ? 0.6 : 2.8, ease: "power3.out", overwrite: true });
+    const { x, d } = frame("hero", width, height, narrow, gapX);
+    gsap.to(base.current, { x, d, duration: reducedMotion ? 0.6 : 2.8, ease: "power3.out", overwrite: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 

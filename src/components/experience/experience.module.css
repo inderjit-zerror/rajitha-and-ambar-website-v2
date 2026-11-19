@@ -34,10 +34,18 @@
 
 /* ─────────────────── Big title (behind the 3D canvas) ───────────────────
  * Set like the book cover: "Rajitha & Ambar" in mixed case, regular weight.
- * Wide screens: "Rajitha" left and "& Ambar" right of the centred book, both
- * the same distance from it, on the book's own centre line.
+ * Wide screens: "Rajitha  [book]  & Ambar" as one line, centred on screen as
+ * a group. The gap is the book's hero framing box, the same maths as the
+ * "hero" view in CameraRig (box 1.62 × 2.0 units fitted into the height left
+ * between the top and bottom UI, or into 40% of the width), so the book always
+ * sits in the gap with air on both sides. The words differ in width, so the
+ * gap is not at the screen centre: InvitationExperience measures where it is
+ * and CameraRig slides the book there.
  * Narrow screens: two stacked lines above the book. */
 .title {
+  --frame-h: calc(100vh - max(120px, 17vh) - max(160px, 22vh));
+  --book-gap: min(var(--frame-h) * 0.9, 44vw);
+
   position: absolute;
   z-index: 1;
   left: var(--edge);
@@ -46,25 +54,22 @@
   top: calc((max(120px, 17%) + 100% - max(160px, 22%)) / 2);
   transform: translateY(-50%);
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  /* the book's width follows the viewport height (~40vh) */
-  column-gap: max(0px, calc(40vh - 2 * var(--edge)));
+  grid-template-columns: auto auto;
+  justify-content: center;
+  column-gap: var(--book-gap);
   margin: 0;
   pointer-events: none;
   font-weight: 400;
-  /* fills the space beside the book: the wider word ("& Ambar") is ~3.65em */
-  font-size: clamp(40px, calc((50vw - 20vh) / 3.8), 250px);
+  /* both words ("Rajitha" 2.81em + "& Ambar" 3.67em + padding ≈ 6.6em) fill the width left beside the gap */
+  font-size: clamp(36px, calc((100vw - 2 * var(--edge) - var(--book-gap)) / 6.9), 230px);
   line-height: 1;
   color: var(--navy);
 }
 .titleLine {
   display: block;
   overflow: hidden; /* mask for the letters sliding in / out */
-  padding: 0.05em 0.04em 0.18em 0; /* bottom: room for the "j" descender */
+  padding: 0.05em 0.04em 0.18em; /* bottom: room for the "j" descender */
   white-space: nowrap;
-}
-.titleLine:first-child {
-  justify-self: end;
 }
 .letter {
   display: inline-block;
