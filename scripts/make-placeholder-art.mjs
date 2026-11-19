@@ -14,7 +14,8 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const ART = path.join(ROOT, "art");
 const MOCK_COVER = path.join(ART, "mockups", "cover-mockup.webp");
 const MOCK_OPEN = path.join(ART, "mockups", "open-mockup.webp");
-const FONT = (v) => path.join(ART, "fonts", `CormorantGaramond-${v}.ttf`);
+// EB Garamond: the book Garamond of the client's mockups (cover title, tabs, card).
+const FONT = (v) => path.join(ART, "fonts", `EBGaramond-${v}.ttf`);
 
 const INK = "#2b4c8c";
 const GOLD = "#a8844f";
@@ -25,9 +26,9 @@ const PAPER = [238, 231, 220];
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const STYLES = {
-  regular: { file: FONT("500-normal"), face: "Cormorant Garamond Medium" },
-  bold: { file: FONT("600-normal"), face: "Cormorant Garamond SemiBold" },
-  italic: { file: FONT("500-italic"), face: "Cormorant Garamond Medium Italic" },
+  regular: { file: FONT("400-normal"), face: "EB Garamond" },
+  bold: { file: FONT("500-normal"), face: "EB Garamond Medium" },
+  italic: { file: FONT("400-italic"), face: "EB Garamond Italic" },
 };
 
 async function text(str, { size, style = "regular", color = INK, tracking = 0 }) {

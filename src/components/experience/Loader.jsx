@@ -83,12 +83,6 @@ export default function Loader() {
       <span className="sr-only">Loading the invitation</span>
       <div ref={sheet} className={styles.sheet}>
         <div className={styles.loaderContent} aria-hidden="true">
-          <span className={styles.mask}>
-            <span data-out="" className={styles.loaderBlessing}>
-              Om Ganeshaya Namaha
-            </span>
-          </span>
-
           <div className={styles.arch} data-fade="">
             <span className={styles.archGlow} />
             {/* eslint-disable-next-line @next/next/no-img-element */}

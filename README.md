@@ -9,7 +9,7 @@ A photoreal cloth-bound folio floating in front of a big typographic hero.
    is ready it drains away like liquid (full-screen WebGL shader).
 2. **Book arrives.** It flies up from below the screen, makes one full 360°
    turn and settles in the centre, between the two halves of the title.
-3. **Click To Open (flexing cover).** The cover lifts on its own hinge, the
+3. **Click the book to open (flexing cover).** The cover lifts on its own hinge, the
    spine lets it fall open, and the board bends softly as it swings.
 4. **Cards come in (painted in).** The left card, then the four event cards,
    appear like watercolour soaking into paper.
@@ -28,7 +28,7 @@ npm run build
 | --- | --- |
 | Move the mouse | the book leans towards the cursor, foil lettering catches the light |
 | Drag | rotate the book (full turns while closed, a gentle swing while open), with inertia |
-| Click the book / button | open |
+| Click the book | open |
 | Hover a pocket card | it peeks up · click to show that event on the left card |
 | Click the left card, a tab, or `Esc` | back to the invitation · `Esc` again closes the book |
 | `Enter` · `←` `→` · `1`–`4` | open · previous / next card · jump to an event |
@@ -58,9 +58,12 @@ venues on the event cards are sample text.
 
 ## Font
 
-One typeface everywhere: **Cormorant Garamond**, the serif of the book cover,
-self-hosted in `src/fonts`. All CSS reads `var(--font-serif)`; to change the
-typeface, change the files listed in `src/app/layout.js`.
+One typeface everywhere: **EB Garamond**, the book Garamond of the client's
+mockups (cover title, event tabs, invitation card). The website (self-hosted
+in `src/fonts`) and the generated card artwork (`art/fonts`, used by
+`npm run art:placeholders`) both use it. All CSS reads `var(--font-serif)`;
+to change the typeface, change the files listed in `src/app/layout.js` and the
+`FONT` line in `scripts/make-placeholder-art.mjs`.
 
 ## Where things are
 
